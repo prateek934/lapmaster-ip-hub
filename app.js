@@ -595,7 +595,7 @@ function viewOverview(){
   <div class="card section">
     <div class="section-head"><div><h2>Patent World Map</h2><div class="sub">Global distribution across filing offices</div></div>
       <div class="legend"><span><i class="dot g"></i> Granted</span><span><i class="dot p"></i> Pending</span></div></div>
-    <div class="map-wrap"><img class="map-img" alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg"/>${mapPins}</div>
+    <div class="map-wrap"><img class="map-img" alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/b/b0/World_location_map_%28equirectangular_180%29.svg"/>${mapPins}</div>
   </div>
   <div class="card section">
     <div class="section-head"><div><h2>Top Entities</h2><div class="sub">By patent count</div></div><a class="link" href="#/patents">View all →</a></div>
