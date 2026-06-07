@@ -560,6 +560,34 @@ const PHEAD=(title,sub,right='')=>`<div class="page-head"><div><h1>${esc(title)}
 /* ============================================================
    LAPMASTER HUB — pages
    ============================================================ */
+function buildDotMap(cb){
+  if(window.__dotMap){cb(window.__dotMap);return;}
+  const img=new Image();
+  img.onload=()=>{
+    const SW=320,SH=160;
+    const sc=document.createElement('canvas');sc.width=SW;sc.height=SH;
+    const sx=sc.getContext('2d');sx.drawImage(img,0,0,SW,SH);
+    let data;try{data=sx.getImageData(0,0,SW,SH).data;}catch(e){cb(null);return;}
+    const W=1200,H=600;
+    const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+    const ctx=cv.getContext('2d');ctx.fillStyle='#c3ccda';
+    const cols=160,rows=80,r=2.05;
+    for(let gy=0;gy<rows;gy++)for(let gx=0;gx<cols;gx++){
+      const sxp=Math.min(SW-1,Math.floor((gx+0.5)/cols*SW));
+      const syp=Math.min(SH-1,Math.floor((gy+0.5)/rows*SH));
+      const i=(syp*SW+sxp)*4, rr=data[i],gg=data[i+1],bb=data[i+2];
+      const land=(bb-Math.max(rr,gg))<14; // ocean is strongly blue-dominant
+      if(land){
+        const px=(gx+0.5)/cols*W, py=(gy+0.5)/rows*H;
+        ctx.beginPath();ctx.arc(px,py,r,0,6.2832);ctx.fill();
+      }
+    }
+    try{window.__dotMap=cv.toDataURL('image/png');}catch(e){cb(null);return;}
+    cb(window.__dotMap);
+  };
+  img.onerror=()=>cb(null);
+  img.src='earth.jpg';
+}
 function viewOverview(){
   const ym=state.deadlines.ym;
   const monthLabel=`${MONTHS[ym%12].toUpperCase()} ${Math.floor(ym/12)}`;
@@ -595,7 +623,7 @@ function viewOverview(){
   <div class="card section">
     <div class="section-head"><div><h2>Patent World Map</h2><div class="sub">Global distribution across filing offices</div></div>
       <div class="legend"><span><i class="dot g"></i> Granted</span><span><i class="dot p"></i> Pending</span></div></div>
-    <div class="map-wrap"><img class="map-img" alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/b/b0/World_location_map_%28equirectangular_180%29.svg"/>${mapPins}</div>
+    <div class="map-wrap"><img class="map-img" id="ov-map-img" alt="World map"/>${mapPins}</div>
   </div>
   <div class="card section">
     <div class="section-head"><div><h2>Top Entities</h2><div class="sub">By patent count</div></div><a class="link" href="#/patents">View all →</a></div>
@@ -618,6 +646,7 @@ function ovAgenda(){
   return `<div class="evt-list">${rows.map(({d,p})=>`<div class="evt-li"><div class="bar" style="background:${col[d[3]]||'#cbd5e1'}"></div><div class="d">${MONTHS[p.m].slice(0,3)} ${p.d}</div><div style="flex:1"><div class="ti">${esc(d[0])}</div><div class="ow">${esc(d[2])}</div></div></div>`).join('')}</div>`;
 }
 function wireOverview(){
+  buildDotMap(url=>{const im=$('#ov-map-img');if(im&&url)im.src=url;});
   const tg=$('#ov-toggle');if(tg)tg.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.ovCal=b.dataset.ovm;rerender();});
   const pv=$('#ov-prev');if(pv)pv.onclick=()=>{state.deadlines.ym--;rerender();};
   const nx=$('#ov-next');if(nx)nx.onclick=()=>{state.deadlines.ym++;rerender();};
@@ -725,38 +754,35 @@ function ptCompetitors(){
   </div>`;
 }
 function ptExam(){const ad=AUDIT_DETAIL;
-  const meta=(k,v)=>`<div class="ex-meta"><span>${esc(k)}</span><b>${v}</b></div>`;
-  const card=(e)=>{
+  const diffCls=(p)=>p>=80?'b-red':p>=60?'b-amber':'b-green';
+  const rows=ad.examReports.map(e=>{
     const d=e[8];
-    const rank=d?`<div class="ex-rank">
-        <div class="ex-rank-h">Grant Rate &amp; Difficulty Ranking</div>
-        <div class="ex-rank-rows">
-          <div><span>3-Year grant rate</span><b>${esc(d.rate)} <i>over ${d.cases} cases</i></b></div>
-          <div><span>Difficulty</span><b class="ex-hard">${esc(d.diff)}</b></div>
-          <div><span>Difficulty percentile</span><div class="pct"><div class="pct-bar"><i style="left:${d.pct}%"></i></div><b>${d.pct}th</b></div></div>
-        </div>
-        <div class="ex-blurb">${esc(d.blurb)}</div>
-      </div>`:`<div class="ex-norank">No examiner assigned — abandoned before substantive examination.</div>`;
-    return `<div class="card ex-card">
-      <div class="ex-top">
-        <div><div class="ex-appno">${svg(I.doc,15)} ${esc(e[0])}</div><div class="ex-title">${esc(e[1])}</div></div>
-        <span class="badge b-red">${esc(e[3])}</span>
-      </div>
-      <div class="ex-metas">
-        ${meta('Office actions',e[2])}${meta('Examiner',esc(e[6]))}${meta('Interviews',e[7])}${meta('Attorney',esc(e[4]))}${meta('Law firm',esc(e[5]))}
-      </div>
-      ${rank}
-    </div>`;
-  };
-  return `<div class="ex-list">${ad.examReports.map(card).join('')}</div>`;
+    const grant=d?`<b>${esc(d.rate)}</b> <span class="muted">/ ${d.cases}</span>`:'<span class="muted">—</span>';
+    const diff=d?`<span class="badge ${diffCls(d.pct)}">${esc(d.diff)}</span> <span class="muted">${d.pct}th</span>`:'<span class="muted">—</span>';
+    return `<tr>
+      <td><div class="appno" style="font-weight:600">${esc(e[0])}</div><div class="muted" style="font-size:12px;margin-top:2px;max-width:280px">${esc(e[1])}</div></td>
+      <td class="assignee">${esc(e[6])||'<span class="muted">—</span>'}</td>
+      <td style="text-align:center">${e[2]}</td>
+      <td style="text-align:center">${e[7]}</td>
+      <td style="white-space:nowrap">${grant}</td>
+      <td style="white-space:nowrap">${diff}</td>
+      <td><span class="badge b-red">${esc(e[3])}</span></td>
+    </tr>`;
+  }).join('');
+  return `<div class="card table-card">
+    <div class="aud-h" style="padding:18px 20px 0">${svg(I.alert,15)} Examination Reports <span class="muted">— ${ad.examReports.length} flagged · examiner grant-rate &amp; difficulty</span></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Application No.</th><th>Examiner</th><th>OAs</th><th>Int.</th><th>3-yr Grant</th><th>Difficulty</th><th>Status</th></tr></thead>
+      <tbody>${rows}</tbody></table></div></div>`;
 }
 function ptJurisdictions(){
+  const FLAG={DE:'🇩🇪',SG:'🇸🇬',US:'🇺🇸',TW:'🇹🇼',CN:'🇨🇳',EP:'🇪🇺',JP:'🇯🇵',KR:'🇰🇷',BR:'🇧🇷',IN:'🇮🇳'};
   const J=LAP_JURISDICTIONS;const total=J.reduce((s,j)=>s+j[2]+j[3],0);
   const max=Math.max(...J.map(j=>j[2]+j[3]));
   const rows=J.map(j=>{const t=j[2]+j[3];const pct=(t/total*100);
     const gw=j[2]/max*100, pw=j[3]/max*100;
     return `<div class="jr-row">
-      <div class="jr-code">${esc(j[0])}</div>
+      <div class="jr-flag">${FLAG[j[0]]||esc(j[0])}</div>
       <div class="jr-name">${esc(j[1])}</div>
       <div class="jr-track"><div class="jr-bar jr-g" style="width:${gw}%"></div><div class="jr-bar jr-p" style="width:${pw}%"></div></div>
       <div class="jr-num"><b>${t}</b><span>${pct.toFixed(1)}% of portfolio</span></div>
