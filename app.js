@@ -570,8 +570,8 @@ function buildDotMap(cb){
     let data;try{data=sx.getImageData(0,0,SW,SH).data;}catch(e){cb(null);return;}
     const W=1200,H=600;
     const cv=document.createElement('canvas');cv.width=W;cv.height=H;
-    const ctx=cv.getContext('2d');ctx.fillStyle='#c3ccda';
-    const cols=160,rows=80,r=2.05;
+    const ctx=cv.getContext('2d');ctx.fillStyle='#94a3b8';
+    const cols=160,rows=80,r=2.25;
     for(let gy=0;gy<rows;gy++)for(let gx=0;gx<cols;gx++){
       const sxp=Math.min(SW-1,Math.floor((gx+0.5)/cols*SW));
       const syp=Math.min(SH-1,Math.floor((gy+0.5)/rows*SH));
@@ -656,34 +656,28 @@ function ptSnapshot(){
   const p=AUDIT.patents;const total=p.total;
   const pct=n=>Math.round(n/total*100);
   const active=113+51, inactive=153;
-  const seg=p.snapshot.map(s=>`<div class="s3-seg" style="flex:${s[1]};--c:${s[2]}" title="${esc(s[0])}: ${s[1]}"><span>${s[1]}</span></div>`).join('');
-  const legend=p.snapshot.map(s=>`<div class="s3-leg"><i style="background:${s[2]}"></i><span class="s3-leg-n">${esc(s[0])}</span><b>${s[1]}</b><em>${pct(s[1])}%</em></div>`).join('');
+  const seg=p.snapshot.map(s=>`<div class="s3-seg" style="flex:${s[1]};--c:${s[2]}" title="${esc(s[0])}: ${s[1]} (${pct(s[1])}%)"><span>${s[1]}</span></div>`).join('');
+  const blabels=p.snapshot.map(s=>`<div class="s3-bl" style="flex:${s[1]}"><i style="background:${s[2]}"></i><span>${esc(s[0])}</span> <b>${s[1]}</b> <em>${pct(s[1])}%</em></div>`).join('');
   const stages=[
     ['20','Yet to begin',I.hourglass,'#94a3b8'],
     ['16','Under examination',I.search,'#f59e0b'],
-    ['9','NOA mailed',I.mail,'#6366f1'],
-    ['113','Granted',I.check,'#10b981'],
+    ['9','NOA — grant imminent',I.mail,'#6366f1'],
   ];
   const pipe=stages.map((s,i)=>{
-    const goal=i===stages.length-1;
     const conn=i<stages.length-1?`<div class="s3-conn">${svg('<path d="M9 18l6-6-6-6"/>',16)}</div>`:'';
-    return `<div class="s3-step${goal?' goal':''}" style="--c:${s[3]}"><div class="s3-ico">${svg(s[2],15)}</div><div class="s3-num">${s[0]}</div><div class="s3-lbl">${esc(s[1])}</div></div>${conn}`;
+    return `<div class="s3-step" style="--c:${s[3]}"><div class="s3-ico">${svg(s[2],15)}</div><div class="s3-num">${s[0]}</div><div class="s3-lbl">${esc(s[1])}</div></div>${conn}`;
   }).join('');
   return `<div class="card s3-snap">
     <div class="s3-head">
       <div class="s3-total"><b>${total}</b><span>Total patents</span></div>
-      <div class="s3-mini"><span class="s3-d s3-dg"></span>${active} active <i>·</i><span class="s3-d s3-dd"></span>${inactive} inactive</div>
-      <div class="s3-risk">${pct(inactive)}% inactive</div>
+      <div class="s3-split"><span class="s3-ok">${active} active</span><i>·</i><span class="s3-deadn">${inactive} dead</span><em>${pct(inactive)}%</em></div>
     </div>
-    <div class="s3-barwrap">
-      <div class="s3-bar">${seg}</div>
-      <div class="s3-bracket"><span style="flex:${active}">Active portfolio</span><span class="bad" style="flex:${inactive}">No longer enforceable</span></div>
-    </div>
-    <div class="s3-legend">${legend}</div>
+    <div class="s3-bar">${seg}</div>
+    <div class="s3-barlabels">${blabels}</div>
     <div class="s3-rule"></div>
-    <div class="s3-pipehead">${svg(I.scale,14)} Prosecution pipeline <span>· ${51} patents in flight to grant</span></div>
+    <div class="s3-pipehead">${svg(I.scale,14)} Prosecution pipeline <span>· where the 51 pending stand</span></div>
     <div class="s3-pipe">${pipe}</div>
-    <div class="s3-wipo">${svg(I.globe,13)} Plus <b>6</b> WIPO / international applications in flight</div>
+    <div class="s3-wipo">${svg(I.globe,13)} Plus <b>6</b> at the WIPO / international stage</div>
   </div>`;
 }
 function ptGaps(){const p=AUDIT.patents;
