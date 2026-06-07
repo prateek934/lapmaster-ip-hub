@@ -667,23 +667,27 @@ function ptRegister(){const ad=AUDIT_DETAIL;
 function ptFeature(){
   const fc=AUDIT_DETAIL.featureCoverage;
   const totalOpps=fc.reduce((s,f)=>s+f.white.length,0);
-  const items=fc.map(f=>{
-    const n=f.white.length;
-    return `<details class="fcov">
-      <summary>
-        <span class="fcov-name">${esc(f.cat)}</span>
-        <span class="fcov-opp">${n} filing ${n===1?'opportunity':'opportunities'}</span>
-      </summary>
-      <div class="fcov-body2">
-        <div class="fcov-h2">${svg(I.shield,14)} Filing opportunities — open whitespace</div>
-        <ul class="fcov-opps">${f.white.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
-        <details class="fcov-prot"><summary>Already covered by existing patents · ${f.prot.length}</summary><ul>${f.prot.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>
+  const lvl=(prot)=>{const p0=(prot&&prot[0])||'';const j=(prot||[]).join(' ');
+    if(/^No active|^No standalone/i.test(p0))return['Gap','r'];
+    if(/may cover|may apply|legacy/i.test(j))return['Light','a'];
+    return['Covered','g'];};
+  const short=(s)=>{s=String(s).trim();let c=s.split(/\s(?:that|based on|using|linking|with|for |across|including)\s/i)[0];if(c.length>62)c=c.slice(0,60).trim()+'…';return c;};
+  const gaps=fc.filter(f=>lvl(f.prot)[1]==='r').length;
+  const rows=fc.map(f=>{
+    const [lab,cls]=lvl(f.prot);
+    const chips=f.white.map(x=>`<span class="fchip" title="${esc(x)}">${esc(short(x))}</span>`).join('');
+    const prot=f.prot.map(x=>`<li>${esc(x)}</li>`).join('');
+    return `<div class="fc3-row">
+      <div class="fc3-left"><span class="fc3-dot ${cls}"></span><div><div class="fc3-name">${esc(f.cat)}</div><span class="fc3-pill ${cls}">${lab}</span></div></div>
+      <div class="fc3-right">
+        <div class="fc3-chips">${chips}</div>
+        <details class="fc3-prot"><summary>${svg(I.check,12)} ${f.prot.length} feature${f.prot.length>1?'s':''} already covered</summary><ul>${prot}</ul></details>
       </div>
-    </details>`;
+    </div>`;
   }).join('');
   return `<div class="card section">
-    <div class="section-head"><div><h2>Feature Coverage</h2><div class="sub">Open whitespace by product line · <b style="color:#b45309">${totalOpps} filing opportunities</b> across ${fc.length} product lines</div></div></div>
-    <div class="fcov-list">${items}</div></div>`;
+    <div class="section-head"><div><h2>Feature Coverage</h2><div class="sub">Open whitespace by product line · <b style="color:#b45309">${totalOpps} filing opportunities</b> · <b style="color:#dc2626">${gaps} lines with no active coverage</b></div></div></div>
+    <div class="fc3-list">${rows}</div></div>`;
 }
 function ptCompetitors(){
   const ad=AUDIT_DETAIL;
