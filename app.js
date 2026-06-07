@@ -612,13 +612,12 @@ function viewOverview(){
     <div><h1>Hi, Anika!</h1><div class="sub">Look at your IP portfolio overview and statistics</div></div>
     <button class="bell">${svg(I.bell,18)}</button>
   </div>
-  <div class="grid">
+  <div class="grid grid-5">
     ${stat('Total Patents','317','ic-blue',I.doc)}
     ${stat('Granted Patents','113','ic-green',I.check)}
-    ${stat('Pending Patents','51','ic-amber',I.clock)}
-    ${stat('Abandoned / Expired / Dead','153','ic-red',I.xc)}
-    ${stat('Ideas Received in Last 30 Days','6','ic-purple',I.ideas)}
-    ${stat('Patents Filed in Last 90 Days','9','ic-indigo',I.doc)}
+    ${stat('Total Pending Patents','51','ic-amber',I.clock)}
+    ${stat('Dead Patents','153','ic-red',I.xc)}
+    ${stat('Avg. Grant Time (Months)','38','ic-purple',I.hourglass)}
   </div>
   <div class="card section">
     <div class="section-head"><div><h2>Patent World Map</h2><div class="sub">Global distribution across filing offices</div></div>
@@ -794,7 +793,7 @@ function viewLapPatents(){
   const right=`<div class="bignum"><div class="n">317</div><div class="l">Total Patents</div></div>`;
   return PHEAD('Patents','Your patent portfolio at a glance',right)
   + ptSnapshot()
-  + `<div class="aud-tabs" style="max-width:640px">${tabs.map(([k,l])=>`<button class="${st.tab===k?'on':''}" data-ptab="${k}">${esc(l)}</button>`).join('')}</div>`
+  + `<div class="tabsticky"><div class="aud-tabs" style="max-width:640px">${tabs.map(([k,l])=>`<button class="${st.tab===k?'on':''}" data-ptab="${k}">${esc(l)}</button>`).join('')}</div></div>`
   + `<div class="pt-body">${sec()}</div>`;
 }
 function wireLapPatents(){
@@ -815,7 +814,7 @@ function viewTmFilings(){
     ? `<b>${nWatch}</b> conflicting marks to monitor across ${AUDIT_DETAIL.similarMarks.length} registrations`
     : `<b>${nFil}</b> marks to file · <b class="amber">${tmFilingGroups().filter(g=>g.urgent).length}</b> priority refiles`;
   return PHEAD('Filings & Watch','New trademark filings to make and conflicts to monitor')
-  + `<div class="aud-tabs" style="max-width:440px">${tabs.map(([k,l])=>`<button class="${st.tab===k?'on':''}" data-tmtab="${k}">${esc(l)}</button>`).join('')}</div>
+  + `<div class="tabsticky"><div class="aud-tabs" style="max-width:440px">${tabs.map(([k,l])=>`<button class="${st.tab===k?'on':''}" data-tmtab="${k}">${esc(l)}</button>`).join('')}</div></div>
      <div class="fc2-summary">${sum}</div>
      <div class="tmf-body">${body}</div>`;
 }
