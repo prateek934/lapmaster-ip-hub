@@ -101,6 +101,7 @@ const state={
   audit:{tab:'decisions'},
   ideasLap:{list:LAP_IDEAS.slice()},
   deadlines:{q:'',view:'calendar',ym:2026*12+5,sort:null},
+  ovCal:'calendar',
   lapPatents:{tab:'gaps',comp:'Lapmaster Wolters'},
   tmFilings:{tab:'filings'},
 };
@@ -560,15 +561,55 @@ const PHEAD=(title,sub,right='')=>`<div class="page-head"><div><h1>${esc(title)}
    LAPMASTER HUB — pages
    ============================================================ */
 function viewOverview(){
-  return PHEAD('Lapmaster Wolters — IP Hub','Your portfolio health & decisions at a glance',auHealth())
-  + auHero()
-  + `<div class="card section"><div class="section-head"><div><h2>Needs your decision</h2><div class="sub">Sorted by priority</div></div><a class="link" href="#/approvals">View all →</a></div>${auDecisions(false)}</div>
-     <div class="quick">
-       <a class="qcard" href="#/patents">${svg(I.patents,18)}<div><b>Patents</b><span>317 records · 113 granted</span></div></a>
-       <a class="qcard" href="#/trademarks">${svg(I.tm,18)}<div><b>Trademarks</b><span>291 records · 201 live</span></div></a>
-       <a class="qcard" href="#/renewals">${svg(I.scale,18)}<div><b>Renewals</b><span>Maintain 82 · Prune 11</span></div></a>
-       <a class="qcard" href="#/ideas">${svg(I.ideas,18)}<div><b>Submit an idea</b><span>Instant AI patentability score</span></div></a>
-     </div>`;
+  const ym=state.deadlines.ym;
+  const monthLabel=`${MONTHS[ym%12].toUpperCase()} ${Math.floor(ym/12)}`;
+  const stat=(label,num,cls,icon)=>`<div class="card stat"><div class="top"><div class="label">${esc(label)}</div><div class="icon ${cls}">${svg(icon,20)}</div></div><div class="num">${num}</div></div>`;
+  const pins=[[24,34],[20,50],[42,64],[48,20],[50,14],[54,36],[64,48],[72,36],[80,30],[84,28],[84,40],[80,54],[88,74],[96,84]];
+  const entities=[['Lapmaster Wolters',228,'71.9%'],['ELB Schliff Edmund Lang',49,'15.5%'],['Precision Surfacing Solutions',24,'7.6%'],['ISOG Technology',16,'5.0%']];
+  const entRow=(name,count,pct)=>`<div class="client"><div class="cav" style="background:${colorFor(name)}1a;color:${colorFor(name)}">${initials(name)}</div><div class="cmeta"><div class="cname">${esc(name)}</div><div class="crank">${pct} of portfolio</div></div><div class="ccount">${count}</div></div>`;
+  const calMode=state.ovCal!=='list';
+  return `
+  <div class="page-head">
+    <div><h1>Hi, Anika!</h1><div class="sub">Look at your IP portfolio overview and statistics</div></div>
+    <button class="bell">${svg(I.bell,18)}</button>
+  </div>
+  <div class="grid">
+    ${stat('Total Patents','317','ic-blue',I.doc)}
+    ${stat('Granted Patents','113','ic-green',I.check)}
+    ${stat('Pending Patents','51','ic-amber',I.clock)}
+    ${stat('Abandoned / Expired / Dead','153','ic-red',I.xc)}
+    ${stat('Ideas Received in Last 30 Days','6','ic-purple',I.ideas)}
+    ${stat('Patents Filed in Last 90 Days','9','ic-indigo',I.doc)}
+  </div>
+  <div class="card section">
+    <div class="section-head"><div><h2>Patent World Map</h2><div class="sub">Global distribution across filing offices</div></div>
+      <div class="legend"><span><i class="dot g"></i> Granted</span><span><i class="dot p"></i> Pending</span></div></div>
+    <div class="map-wrap"><img alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg"/>${pins.map(([x,y])=>`<div class="pin" style="left:${x}%;top:${y}%"></div>`).join('')}</div>
+  </div>
+  <div class="card section">
+    <div class="section-head"><div><h2>Top Entities</h2><div class="sub">By patent count</div></div><a class="link" href="#/patents">View all →</a></div>
+    ${entities.map(e=>entRow(e[0],e[1],e[2])).join('')}
+  </div>
+  <div class="card section">
+    <div class="section-head">
+      <div><h2>Timeline &amp; Events</h2><div class="sub">Upcoming deadlines &amp; maintenance</div></div>
+      <div class="controls">
+        <div class="seg" id="ov-toggle"><button class="${calMode?'on':''}" data-ovm="calendar">${svg(I.cal,15)}Calendar</button><button class="${!calMode?'on':''}" data-ovm="list">${svg(I.list,15)}List</button></div>
+        <div class="month-nav"><button class="navbtn" id="ov-prev">${svg('<path d="M15 18l-6-6 6-6"/>',16)}</button><div class="label">${monthLabel}</div><button class="navbtn" id="ov-next">${svg('<path d="M9 18l6-6-6-6"/>',16)}</button></div>
+      </div>
+    </div>
+    ${calMode?dlCalendar():ovAgenda()}
+  </div>`;
+}
+function ovAgenda(){
+  const col={Overdue:'#f87171','Due soon':'#fbbf24',Active:'#34d399'};
+  const rows=LAP_DEADLINES.map(d=>({d,p:parseDL(d[4])})).filter(x=>x.p).sort((a,b)=>(a.p.y-b.p.y)||(a.p.m-b.p.m)||(a.p.d-b.p.d));
+  return `<div class="evt-list">${rows.map(({d,p})=>`<div class="evt-li"><div class="bar" style="background:${col[d[3]]||'#cbd5e1'}"></div><div class="d">${MONTHS[p.m].slice(0,3)} ${p.d}</div><div style="flex:1"><div class="ti">${esc(d[0])}</div><div class="ow">${esc(d[2])}</div></div></div>`).join('')}</div>`;
+}
+function wireOverview(){
+  const tg=$('#ov-toggle');if(tg)tg.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.ovCal=b.dataset.ovm;rerender();});
+  const pv=$('#ov-prev');if(pv)pv.onclick=()=>{state.deadlines.ym--;rerender();};
+  const nx=$('#ov-next');if(nx)nx.onclick=()=>{state.deadlines.ym++;rerender();};
 }
 /* Patents — health bar + prosecution pipeline (clearer than a donut) */
 function ptSnapshot(){
@@ -1018,7 +1059,7 @@ function wireAudit(){
    ROUTER
    ============================================================ */
 const ROUTES={
-  '':          {view:viewOverview},
+  '':          {view:viewOverview, wire:wireOverview},
   'patents':   {view:viewLapPatents, wire:wireLapPatents},
   'trademarks':{view:viewLapTrademarks},
   'tm-filings':{view:viewTmFilings, wire:wireTmFilings},
