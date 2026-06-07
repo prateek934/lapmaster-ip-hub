@@ -399,6 +399,21 @@ const AUDIT_DETAIL = {
     ],
     total:['113','100%','$243,698'],
     note:'Evaluated the full granted portfolio to cut unnecessary renewal spend.',
+    method:'Each granted patent scored on product linkage, forward citations, family size, age, and per-jurisdiction renewal cost.',
+    // [appNo, title, country, annualCost, reason, confidence]  — sums to $16,809/yr
+    pruneList:[
+      ['US 8,142,260 B2','Releasable honing tool body — fluid-actuated abrasive expansion','US',3120,'Legacy honing disclosure — superseded, no product linkage','High'],
+      ['US 9,576,818 B2','Integral air-gage arrangement for bore finishing','US',2980,'Not distinguished from prior art · 0 forward citations','High'],
+      ['EP 2 487 015 B1','Hydrostatic clamping for steady-rest fixation','EP',1940,'Covered by a broader active EP family','High'],
+      ['DE 10 2014 207 642','Robotic magazine workpiece-handling structure','DE',1510,'Legacy automation · family inactive elsewhere','High'],
+      ['BR 11 2018 004 521','Press-ram guide-section structure','BR',1180,'High-cost jurisdiction · no local manufacturing','Med'],
+      ['JP 5 821 447','Machine-table illumination for grinding machines','JP',1280,'Peripheral feature · single-member family','High'],
+      ['KR 10-1683 204','Magnetic-plate cleaning device','KR',1090,'Niche feature · no regional sales','Med'],
+      ['SG 11201 706 933','Conveyor-feed accessory for CNC grinding','SG',1009,'Superseded by modular automation kit','High'],
+      ['IN 3142/CHE/2013','Coolant-strategy accessory','IN',1000,'No product linkage · aging family','Med'],
+      ['CN 104 209 318 B','Coolant-nozzle carrier arrangement','CN',940,'Duplicate of an active CN family','High'],
+      ['TW I623 487','Operator-visibility lighting feature','TW',760,'Peripheral · no product linkage','High'],
+    ],
   },
 
   // 6. Trademark portfolio snapshot

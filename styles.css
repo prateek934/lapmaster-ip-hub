@@ -364,6 +364,25 @@ tbody tr:hover{background:#fcfcfd}
 .pc-act{font-size:12.5px;color:#64748b;margin-top:6px}
 .prune-total{margin-top:12px;font-size:13px;color:#64748b}
 .prune-total b{color:#18181b}
+/* Renewals/Pruning redesign */
+.rn-hero{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.rn-tile{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;position:relative;overflow:hidden}
+.rn-tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#cbd5e1}
+.rn-tile.rn-save::before{background:#10b981}
+.rn-tile.rn-watch::before{background:#f59e0b}
+.rn-k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8}
+.rn-v{font-size:30px;font-weight:800;letter-spacing:-.02em;color:#0b1220;margin:8px 0 3px;font-variant-numeric:tabular-nums}
+.rn-v span{font-size:14px;font-weight:600;color:#94a3b8;margin-left:2px}
+.rn-save .rn-v{color:#059669}
+.rn-s{font-size:13px;color:#64748b}
+.rn-bar{display:flex;gap:3px;height:34px;margin-bottom:18px}
+.rn-seg{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;border-radius:6px;background:var(--c);box-shadow:inset 0 -2px 4px rgba(0,0,0,.08)}
+.rn-seg span{text-shadow:0 1px 1px rgba(0,0,0,.15)}
+.rn-green{--c:#10b981}.rn-amber{--c:#f59e0b}.rn-red{--c:#ef4444}
+.tbl-head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px 22px 16px;border-bottom:1px solid var(--line)}
+.tbl-head-row h2{font-size:16px}
+.rn-tablesum{font-size:13px;color:#64748b;white-space:nowrap;background:#f8fafc;border:1px solid var(--border);border-radius:999px;padding:7px 14px;font-weight:500}
+.rn-tablesum b{color:#0b1220;font-weight:700}
 
 .aud-acc{margin-top:16px;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
 .aud-acc>summary{cursor:pointer;font-weight:600;color:#334155;padding:16px 20px;font-size:14px;display:flex;align-items:center;gap:8px;list-style:none}
@@ -739,8 +758,8 @@ tbody tr:hover{background:#fafbfc}
 .fcov-prot li{font-size:13px;color:#64748b;line-height:1.5}
 
 /* ============ Accurate world map + hover tooltips ============ */
-.map-wrap{position:relative;width:100%;aspect-ratio:2/1;margin-top:6px;overflow:visible}
-.map-wrap{background:#fafbfc;border-radius:12px}
+.map-wrap{position:relative;width:100%;aspect-ratio:2000/772;margin-top:6px;overflow:visible}
+.map-wrap{background:#fbfcfd;border-radius:12px}
 .map-img{width:100%;height:100%;object-fit:fill;filter:none;opacity:1;pointer-events:none;-webkit-user-drag:none}
 .map-wrap .pin{position:absolute;width:auto;height:auto;background:none;box-shadow:none;border-radius:0;transform:translate(-50%,-50%);z-index:1}
 .map-wrap .pin:hover{z-index:8}

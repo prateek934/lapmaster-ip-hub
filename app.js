@@ -474,8 +474,9 @@ function auDecisions(head=true){const a=AUDIT;
   const h=head?`<div class="dec-head">${svg(I.alert,16)} ${a.decisions.length} items need your attention <span class="muted" style="font-weight:400">· sorted by priority</span></div>`:'';
   return h+a.decisions.map(d=>`<div class="decision"><span class="sevdot" style="background:${SEV[d.sev]}"></span><div class="dec-main"><div class="dec-title">${esc(d.title)} <span class="dec-scope">${esc(d.scope)}</span></div><div class="dec-why">${esc(d.why)}</div></div><button class="dec-cta">${esc(d.cta)} ${svg(I.arrowR,14)}</button></div>`).join('');}
 function auRenewBand(){const pr=AUDIT_DETAIL.pruning;
+  const bar=pr.rows.map(r=>`<div class="rn-seg rn-${r[0]}" style="flex:${r[2]}" title="${esc(r[1])}: ${r[2]} (${esc(r[3])})"><span>${r[2]}</span></div>`).join('');
   const cards=pr.rows.map(r=>`<div class="prune-card prune-${r[0]}"><div class="pc-label">${esc(r[1])}</div><div class="pc-count">${r[2]}<span>${r[3]}</span></div><div class="pc-cost">${esc(r[4])}/yr</div><div class="pc-act">${esc(r[5])}</div></div>`).join('');
-  return `<div class="prune-band">${cards}</div><div class="prune-total">Total reviewed <b>${pr.total[0]}</b> · Est. annual renewal <b>${esc(pr.total[2])}</b></div>`;}
+  return `<div class="rn-bar">${bar}</div><div class="prune-band">${cards}</div>`;}
 function auPatentsDetail(){
   const p=AUDIT.patents;const ad=AUDIT_DETAIL;
   let acc=0;const stops=p.snapshot.map(s=>{const start=acc/p.total*360;acc+=s[1];const end=acc/p.total*360;return `${s[2]} ${start}deg ${end}deg`;}).join(',');
@@ -560,34 +561,6 @@ const PHEAD=(title,sub,right='')=>`<div class="page-head"><div><h1>${esc(title)}
 /* ============================================================
    LAPMASTER HUB — pages
    ============================================================ */
-function buildDotMap(cb){
-  if(window.__dotMap){cb(window.__dotMap);return;}
-  const img=new Image();
-  img.onload=()=>{
-    const SW=320,SH=160;
-    const sc=document.createElement('canvas');sc.width=SW;sc.height=SH;
-    const sx=sc.getContext('2d');sx.drawImage(img,0,0,SW,SH);
-    let data;try{data=sx.getImageData(0,0,SW,SH).data;}catch(e){cb(null);return;}
-    const W=1200,H=600;
-    const cv=document.createElement('canvas');cv.width=W;cv.height=H;
-    const ctx=cv.getContext('2d');ctx.fillStyle='#94a3b8';
-    const cols=160,rows=80,r=2.25;
-    for(let gy=0;gy<rows;gy++)for(let gx=0;gx<cols;gx++){
-      const sxp=Math.min(SW-1,Math.floor((gx+0.5)/cols*SW));
-      const syp=Math.min(SH-1,Math.floor((gy+0.5)/rows*SH));
-      const i=(syp*SW+sxp)*4, rr=data[i],gg=data[i+1],bb=data[i+2];
-      const land=(bb-Math.max(rr,gg))<14; // ocean is strongly blue-dominant
-      if(land){
-        const px=(gx+0.5)/cols*W, py=(gy+0.5)/rows*H;
-        ctx.beginPath();ctx.arc(px,py,r,0,6.2832);ctx.fill();
-      }
-    }
-    try{window.__dotMap=cv.toDataURL('image/png');}catch(e){cb(null);return;}
-    cb(window.__dotMap);
-  };
-  img.onerror=()=>cb(null);
-  img.src='earth.jpg';
-}
 function viewOverview(){
   const ym=state.deadlines.ym;
   const monthLabel=`${MONTHS[ym%12].toUpperCase()} ${Math.floor(ym/12)}`;
@@ -597,7 +570,8 @@ function viewOverview(){
   const mapPins=LAP_JURISDICTIONS.map(j=>{
     const g=GEO[j[0]];if(!g)return '';
     const lat=g[0],lon=g[1];
-    const x=(lon+180)/360*100, y=(90-lat)/180*100;
+    /* map.svg is cropped equirectangular: viewBox y 38.889..811.111 (lat 83..-56) */
+    const x=(lon+180)/360*100, y=(((90-lat)/180*1000)-38.889)/772.222*100;
     const t=j[2]+j[3], sz=10+Math.round((t/maxT)*16);
     return `<div class="pin" style="left:${x}%;top:${y}%">
       <span class="pin-dot" style="width:${sz}px;height:${sz}px"></span>
@@ -622,7 +596,7 @@ function viewOverview(){
   <div class="card section">
     <div class="section-head"><div><h2>Patent World Map</h2><div class="sub">Global distribution across filing offices</div></div>
       <div class="legend"><span><i class="dot g"></i> Granted</span><span><i class="dot p"></i> Pending</span></div></div>
-    <div class="map-wrap"><img class="map-img" id="ov-map-img" alt="World map"/>${mapPins}</div>
+    <div class="map-wrap"><img class="map-img" id="ov-map-img" src="world.svg" alt="World map"/>${mapPins}</div>
   </div>
   <div class="card section">
     <div class="section-head"><div><h2>Top Entities</h2><div class="sub">By patent count</div></div><a class="link" href="#/patents">View all →</a></div>
@@ -645,7 +619,6 @@ function ovAgenda(){
   return `<div class="evt-list">${rows.map(({d,p})=>`<div class="evt-li"><div class="bar" style="background:${col[d[3]]||'#cbd5e1'}"></div><div class="d">${MONTHS[p.m].slice(0,3)} ${p.d}</div><div style="flex:1"><div class="ti">${esc(d[0])}</div><div class="ow">${esc(d[2])}</div></div></div>`).join('')}</div>`;
 }
 function wireOverview(){
-  buildDotMap(url=>{const im=$('#ov-map-img');if(im&&url)im.src=url;});
   const tg=$('#ov-toggle');if(tg)tg.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.ovCal=b.dataset.ovm;rerender();});
   const pv=$('#ov-prev');if(pv)pv.onclick=()=>{state.deadlines.ym--;rerender();};
   const nx=$('#ov-next');if(nx)nx.onclick=()=>{state.deadlines.ym++;rerender();};
@@ -823,9 +796,44 @@ function wireTmFilings(){
 }
 function viewRenewals(){
   const pr=AUDIT_DETAIL.pruning;
+  const FLAG={DE:'🇩🇪',SG:'🇸🇬',US:'🇺🇸',TW:'🇹🇼',CN:'🇨🇳',EP:'🇪🇺',JP:'🇯🇵',KR:'🇰🇷',BR:'🇧🇷',IN:'🇮🇳'};
+  const confCls=c=>c==='High'?'b-green':'b-amber';
+  const hero=`<div class="rn-hero">
+    <div class="rn-tile">
+      <div class="rn-k">Annual renewal spend</div>
+      <div class="rn-v">$243,698<span>/yr</span></div>
+      <div class="rn-s">across 113 granted patents</div>
+    </div>
+    <div class="rn-tile rn-save">
+      <div class="rn-k">Recoverable now</div>
+      <div class="rn-v">$16,809<span>/yr</span></div>
+      <div class="rn-s">prune 11 low-value patents</div>
+    </div>
+    <div class="rn-tile rn-watch">
+      <div class="rn-k">Pending counsel</div>
+      <div class="rn-v">$44,668<span>/yr</span></div>
+      <div class="rn-s">20 candidates under review</div>
+    </div>
+  </div>`;
+  const prRows=pr.pruneList.map(p=>`<tr>
+    <td class="appno" style="font-weight:600;white-space:nowrap">${FLAG[p[2]]||''} ${esc(p[0])}</td>
+    <td class="title-cell" style="max-width:340px">${esc(p[1])}</td>
+    <td class="muted">${esc(p[4])}</td>
+    <td style="text-align:right;font-weight:600;font-variant-numeric:tabular-nums">$${p[3].toLocaleString()}/yr</td>
+    <td><span class="badge ${confCls(p[5])}">${esc(p[5])}</span></td>
+  </tr>`).join('');
+  const pruneTable=`<div class="card table-card">
+    <div class="tbl-head-row"><div><h2 style="margin:0">🔴 Prune candidates · 11 patents</h2><div class="sub">Let lapse at next renewal — ${esc(pr.method)}</div></div>
+      <div class="rn-tablesum">Saves <b>$16,809</b>/yr</div></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Patent</th><th>Title</th><th>Why flagged</th><th style="text-align:right">Annual cost</th><th>Confidence</th></tr></thead>
+      <tbody>${prRows}</tbody>
+    </table></div></div>`;
   return PHEAD('Renewals & Pruning','Decide what to maintain, review, or let lapse')
-  + `<div class="card section"><div class="section-head"><div><h2>Renewal recommendations</h2><div class="sub">${esc(pr.note)}</div></div></div>${auRenewBand()}</div>
-     <div class="plan-note">${svg(I.alert,14)} Pruning the 11 flagged patents saves an estimated $16,809/yr; the 20 "review" candidates ($44,668/yr) need counsel sign-off before lapse.</div>`;
+  + hero
+  + `<div class="card section"><div class="section-head"><div><h2>Recommendations</h2><div class="sub">${esc(pr.note)}</div></div><div class="rn-tablesum">Total <b>${pr.total[0]}</b> · <b>${esc(pr.total[2])}</b>/yr</div></div>${auRenewBand()}</div>`
+  + pruneTable
+  + `<div class="plan-note">${svg(I.alert,14)} The 20 “review” candidates ($44,668/yr) need counsel sign-off before lapse — flag for manual evaluation.</div>`;
 }
 function viewInvestment(){
   return PHEAD('Investment','What it takes to protect your IP the right way')+auPlan();
