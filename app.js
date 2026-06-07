@@ -564,7 +564,18 @@ function viewOverview(){
   const ym=state.deadlines.ym;
   const monthLabel=`${MONTHS[ym%12].toUpperCase()} ${Math.floor(ym/12)}`;
   const stat=(label,num,cls,icon)=>`<div class="card stat"><div class="top"><div class="label">${esc(label)}</div><div class="icon ${cls}">${svg(icon,20)}</div></div><div class="num">${num}</div></div>`;
-  const pins=[[24,34],[20,50],[42,64],[48,20],[50,14],[54,36],[64,48],[72,36],[80,30],[84,28],[84,40],[80,54],[88,74],[96,84]];
+  const GEO={DE:[52.5,13.4],SG:[1.35,103.8],US:[39.8,-98.6],TW:[23.7,121.0],CN:[35.0,103.0],EP:[48.1,11.6],JP:[36.2,138.3],KR:[36.5,127.8],BR:[-10.0,-52.0],IN:[22.0,79.0]};
+  const maxT=Math.max(...LAP_JURISDICTIONS.map(j=>j[2]+j[3]));
+  const mapPins=LAP_JURISDICTIONS.map(j=>{
+    const g=GEO[j[0]];if(!g)return '';
+    const lat=g[0],lon=g[1];
+    const x=(lon+180)/360*100, y=(90-lat)/180*100;
+    const t=j[2]+j[3], sz=10+Math.round((t/maxT)*16);
+    return `<div class="pin" style="left:${x}%;top:${y}%">
+      <span class="pin-dot" style="width:${sz}px;height:${sz}px"></span>
+      <span class="pin-tip"><b>${esc(j[1])}</b><span><i class="td g"></i>${j[2]} granted · <i class="td p"></i>${j[3]} pending · <b>${t}</b> total</span></span>
+    </div>`;
+  }).join('');
   const entities=[['Lapmaster Wolters',228,'71.9%'],['ELB Schliff Edmund Lang',49,'15.5%'],['Precision Surfacing Solutions',24,'7.6%'],['ISOG Technology',16,'5.0%']];
   const entRow=(name,count,pct)=>`<div class="client"><div class="cav" style="background:${colorFor(name)}1a;color:${colorFor(name)}">${initials(name)}</div><div class="cmeta"><div class="cname">${esc(name)}</div><div class="crank">${pct} of portfolio</div></div><div class="ccount">${count}</div></div>`;
   const calMode=state.ovCal!=='list';
@@ -584,7 +595,7 @@ function viewOverview(){
   <div class="card section">
     <div class="section-head"><div><h2>Patent World Map</h2><div class="sub">Global distribution across filing offices</div></div>
       <div class="legend"><span><i class="dot g"></i> Granted</span><span><i class="dot p"></i> Pending</span></div></div>
-    <div class="map-wrap"><img alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg"/>${pins.map(([x,y])=>`<div class="pin" style="left:${x}%;top:${y}%"></div>`).join('')}</div>
+    <div class="map-wrap"><img class="map-img" alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg"/>${mapPins}</div>
   </div>
   <div class="card section">
     <div class="section-head"><div><h2>Top Entities</h2><div class="sub">By patent count</div></div><a class="link" href="#/patents">View all →</a></div>
